@@ -1,5 +1,4 @@
-
-# Use official Node.js LTS image
+# Use the official Node.js LTS image
 FROM node:20-alpine
 
 # Set working directory
@@ -15,8 +14,7 @@ RUN npm install --production
 COPY . .
 
 # Expose the app port
-EXPOSE 3001
+EXPOSE 3002
 
 # Start the app
-CMD ["npm", "index.js"]
-
+CMD ["node", "index.js"]

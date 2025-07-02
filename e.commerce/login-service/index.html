@@ -1,1 +1,38 @@
-<h1>Login Service</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login - Felix Commerce</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+  <div class="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Login to Felix Commerce</h2>
+    
+    <!-- Error message if ?error=1 -->
+    <script>
+      if (window.location.search.includes('error=1')) {
+        document.write('<p class="mb-4 text-red-500 text-sm">Invalid credentials. Please try again.</p>');
+      }
+    </script>
+
+    <form action="/dashboard.html" method="GET">
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-semibold mb-2" for="email">Email</label>
+        <input type="email" id="email" name="email" required class="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-semibold mb-2" for="password">Password</label>
+        <input type="password" id="password" name="password" required class="w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <div class="mb-4 flex items-center">
+        <input type="checkbox" id="remember" name="remember" class="mr-2" />
+        <label for="remember" class="text-sm text-gray-600">Remember me</label>
+      </div>
+      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md font-semibold hover:bg-blue-700 transition">Login</button>
+    </form>
+  </div>
+</body>
+</html>
+

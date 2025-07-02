@@ -1,0 +1,102 @@
+version: "3.8"
+
+services:
+  # Database Services
+  postgres-db:
+    image: postgres:15-alpine
+    container_name: ecommerce-postgres
+    environment:
+      POSTGRES_DB: ecommerce
+      POSTGRES_USER: ecommerce_user
+      POSTGRES_PASSWORD: ecommerce_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ecommerce-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ecommerce_user -d ecommerce"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis-cache:
+    image: redis:7-alpine
+    container_name: ecommerce-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ecommerce-net
+    command: redis-server --appendonly yes
+
+  # Application Services
+  login-service:
+    build:
+      context: ./login-service
+    ports:
+      - "5001:80"
+    container_name: login-service
+    environment:
+      - DATABASE_URL=postgresql://ecommerce_user:ecommerce_pass@postgres-db:5432/ecommerce
+      - REDIS_URL=redis://redis-cache:6379
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+
+  product-service:
+    build:
+      context: ./product-service
+    ports:
+      - "5002:3000"
+    container_name: product-service
+    environment:
+      - DATABASE_URL=postgresql://ecommerce_user:ecommerce_pass@postgres-db:5432/ecommerce
+      - REDIS_URL=redis://redis-cache:6379
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+
+  order-service:
+    build:
+      context: ./order-service
+    ports:
+      - "5003:3002"
+    container_name: order-service
+    environment:
+      - DATABASE_URL=postgresql://ecommerce_user:ecommerce_pass@postgres-db:5432/ecommerce
+      - REDIS_URL=redis://redis-cache:6379
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - ecommerce-net
+
+  # Database Admin Tool (Optional)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: ecommerce-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@ecommerce.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    networks:
+      - ecommerce-net
+    depends_on:
+      - postgres-db
+
+networks:
+  ecommerce-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
