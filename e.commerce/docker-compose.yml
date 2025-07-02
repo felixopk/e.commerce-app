@@ -14,7 +14,7 @@ services:
     build:
       context: ./product-service
     ports:
-      - "5002:80"
+      - "5002:3000"
     container_name: product-service
     networks:
       - ecommerce-net
