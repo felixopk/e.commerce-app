@@ -6,18 +6,18 @@ services:
     image: postgres:15-alpine
     container_name: ecommerce-postgres
     environment:
-      POSTGRES_DB: ecommerce
-      POSTGRES_USER: ecommerce_user
-      POSTGRES_PASSWORD: ecommerce_pass
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - ecommerce-net
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ecommerce_user -d ecommerce"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -26,23 +26,25 @@ services:
     image: redis:7-alpine
     container_name: ecommerce-redis
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:6379"
     volumes:
       - redis_data:/data
     networks:
       - ecommerce-net
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
 
   # Application Services
   login-service:
     build:
       context: ./login-service
     ports:
-      - "5001:80"
+      - "${LOGIN_SERVICE_PORT}:3001"
     container_name: login-service
     environment:
-      - DATABASE_URL=postgresql://ecommerce_user:ecommerce_pass@postgres-db:5432/ecommerce
-      - REDIS_URL=redis://redis-cache:6379
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis-cache:6379
+      - JWT_SECRET=${JWT_SECRET}
+      - PORT=3001  # Add this to be explicit
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -53,11 +55,12 @@ services:
     build:
       context: ./product-service
     ports:
-      - "5002:3000"
+      - "${PRODUCT_SERVICE_PORT}:3000"
     container_name: product-service
     environment:
-      - DATABASE_URL=postgresql://ecommerce_user:ecommerce_pass@postgres-db:5432/ecommerce
-      - REDIS_URL=redis://redis-cache:6379
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis-cache:6379
+      - API_SECRET=${API_SECRET}
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -68,11 +71,17 @@ services:
     build:
       context: ./order-service
     ports:
-      - "5003:3002"
+      - "${ORDER_SERVICE_PORT}:3002"
     container_name: order-service
     environment:
-      - DATABASE_URL=postgresql://ecommerce_user:ecommerce_pass@postgres-db:5432/ecommerce
-      - REDIS_URL=redis://redis-cache:6379
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-db:5432/${POSTGRES_DB}
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis-cache:6379
+      - API_SECRET=${API_SECRET}
+      - DB_HOST=postgres-db
+      - DB_PORT=5432
+      - DB_NAME=${POSTGRES_DB}
+      - DB_USER=${POSTGRES_USER}
+      - DB_PASSWORD=${POSTGRES_PASSWORD}
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -84,10 +93,10 @@ services:
     image: dpage/pgadmin4
     container_name: ecommerce-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@ecommerce.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
-      - "5050:80"
+      - "${PGADMIN_PORT}:80"
     networks:
       - ecommerce-net
     depends_on:
