@@ -1,4 +1,8 @@
-// login-service/index.js
+
+
+
+// ... rest of your imports and code
+
 const express = require('express');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');  // Changed from 'bcrypt' to 'bcryptjs'
@@ -6,6 +10,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const cors = require('cors');
 const path = require('path');
+
 
 const app = express();
 const port = process.env.PORT || 3001;
